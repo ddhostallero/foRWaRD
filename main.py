@@ -10,15 +10,19 @@ import os
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-n', '--network', default='../../drp-data/DB_KnowEnG/9606.STRING_experimental.edge', help='Name of the network file')
-parser.add_argument('-m', '--mapping', default='../../drp-data/DB_KnowEnG/mapping/9606.STRING_experimental.node_map', help='Name of the gene mapping file')
-parser.add_argument('-d', '--assoc', default='DisGeNet/all_gene_disease_associations.tsv', help='Name of the didsease-gene assoc file')
+parser.add_argument('-n', '--network', default='data/KnowEnG/9606.hn_IntNet.edge', help='Name of the network file')
+parser.add_argument('-m', '--mapping', default='data/KnowEnG/9606.hn_IntNet.node_map', help='Name of the gene mapping file')
+parser.add_argument('-a', '--assoc', default='data/DisGeNet/all_gene_disease_associations.tsv', help='Name of the disease-gene assoc file')
+parser.add_argument('-d', '--disease', default='data/disease_of_interest.txt', help='Name of the file containing the list of diseases of interest')
+parser.add_argument('-g', '--gene', default='data/genes_of_interest.txt', help='Name of the file containing the list of genes of interest')
 parser.add_argument('-w', '--weight', default='gda', help='[gda] | ones')
 args = parser.parse_args() 
 
 assoc_file = args.assoc
 network_file = args.network
 mapping_file = args.mapping
+genes_file = args.gene 
+diseases_file = args.disease
 weight = args.weight
 threshold = 0.4
 
@@ -27,13 +31,10 @@ threshold = 0.4
 results_dir = 'results/'
 if not os.path.exists(results_dir):
 	os.mkdir(results_dir)
-results_dir += weight + '/'
-if not os.path.exists(results_dir):
-	os.mkdir(results_dir)
 
 # load diseases of interest
 doi = []
-with open('disease_of_interest.txt') as f:
+with open(diseases_file) as f:
 	for line in f:
 		doi.append(line.strip())
 
@@ -50,31 +51,11 @@ network.columns = ['gene1', 'gene2', 'weight']
 # load the gene name mapping 
 mapping = pd.read_csv(mapping_file, sep='\t', header=None)
 
-goi = [
-'G3BP1',
-'DPYSL2',
-'UNC13D',
-'FKBP15',
-'STX11',
-'LARP7',
-'BAG2',
-'STXBP2',
-'RAB8A',
-'SYTL4',
-'RAB27A',
-'CSNK2B',
-'LYST',
-'AP3B1',
-'GNB1',
-'PTK2',
-'SH2D1A',
-'GOLGA2',
-'XIAP',
-'ITK',
-'COQ8B',
-'CD27',
-'MOV10',
-'MAGT1']
+# load genes of interest
+goi = []
+with open(genes_file) as f:
+	for line in f:
+		goi.append(line.strip())
 
 # check for mappings
 goi_mapping = mapping.loc[mapping[3].isin(goi)]
@@ -155,13 +136,13 @@ results = results.loc[doi]
 results['difference'] = results['steady_prob_hlh'] - results['steady_prob_all']
 results['ratio'] = results['steady_prob_hlh']/results['steady_prob_all']
 results['norm_diff'] = (results['difference']/(np.abs(results['difference']).max()))/2 + 0.5
-results.sort_values('norm_diff', ascending=False).to_csv(results_dir + 'rwr_steady_prob_%.1f.csv'%(threshold))
+results.sort_values('norm_diff', ascending=False).to_csv(results_dir + 'rwr_steady_prob.csv')
 
 ranking = pd.DataFrame(index=range(1, len(results)+1))
 ranking['hlh'] = results.sort_values('steady_prob_hlh', ascending=False).index
 ranking['all'] = results.sort_values('steady_prob_all', ascending=False).index
 
-ranking.to_csv(results_dir + 'rwr_ranking_%.1f.csv'%(threshold))
+ranking.to_csv(results_dir + 'rwr_ranking.csv')
 results['gene_assoc_count'] = assoc.groupby('diseaseName')['geneId'].count()
 
 
@@ -173,7 +154,7 @@ plt.ylabel('steady state probability')
 plt.title('RWR using HLH')
 for d in results.index:
 	plt.annotate(d[:10], (results.loc[d]['gene_assoc_count'], results.loc[d]['steady_prob_hlh']))
-plt.savefig(results_dir + 'RWR_HLH_%.1f.png'%threshold)
+plt.savefig(results_dir + 'RWR_HLH.png')
 # plt.show()
 
 plt.clf()
@@ -185,7 +166,7 @@ plt.ylabel('steady state probability')
 plt.title('RWR using all genes')
 for d in results.index:
 	plt.annotate(d[:10], (results.loc[d]['gene_assoc_count'], results.loc[d]['steady_prob_all']))
-plt.savefig(results_dir + 'RWR_all_%.1f.png'%threshold)
+plt.savefig(results_dir + 'RWR_all.png')
 # plt.show()
 
 
