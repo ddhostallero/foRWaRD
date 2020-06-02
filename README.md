@@ -1,7 +1,6 @@
 # foRWaRD (Informed Random Walk for Ranking of Diseases)
 
-![Pipeline]
-(https://github.com/ddhostallero/foRWaRD/forRWaRD_pipe.png)
+![Pipeline](https://github.com/ddhostallero/foRWaRD/blob/master/foRWaRD_pipe.png)
 
 # Setup
 The following dependencies are required:
