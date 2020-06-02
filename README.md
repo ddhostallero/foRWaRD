@@ -1,5 +1,7 @@
-# foRWaRD (Informed Randon Walk for Ranking of Diseases)
+# foRWaRD (Informed Random Walk for Ranking of Diseases)
 
+![Pipeline]
+(https://github.com/ddhostallero/foRWaRD/forRWaRD_pipe.png)
 
 # Setup
 The following dependencies are required:

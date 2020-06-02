@@ -136,8 +136,15 @@ results = results.loc[doi]
 results['difference'] = results['steady_prob_hlh'] - results['steady_prob_all']
 results['ratio'] = results['steady_prob_hlh']/results['steady_prob_all']
 results['norm_diff'] = (results['difference']/(np.abs(results['difference']).max()))/2 + 0.5
-results.sort_values('norm_diff', ascending=False).to_csv(results_dir + 'rwr_steady_prob.csv')
 
+# do not include zero probs in ranking
+zero_prob = results.loc[results['steady_prob_hlh'] + results['steady_prob_all'] == 0]
+results = results.loc[~results.index.isin(zero_prob.index)]
+results = results.sort_values('norm_diff', ascending=False)
+results = results.append(zero_prob)
+results.to_csv(results_dir + 'rwr_steady_prob.csv')
+
+# other ranking
 ranking = pd.DataFrame(index=range(1, len(results)+1))
 ranking['hlh'] = results.sort_values('steady_prob_hlh', ascending=False).index
 ranking['all'] = results.sort_values('steady_prob_all', ascending=False).index
